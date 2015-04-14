@@ -11,7 +11,7 @@ function init(editor, onSave) {
 	var retText = '';
 
 	try {
-		retText = esformatter.format(text, esformatter.rc(editor.getUri()));
+		retText = esformatter.format(text, esformatter.rc(editor.getURI()));
 	} catch (err) {
 		console.error(err);
 		atom.beep();
@@ -29,11 +29,9 @@ function init(editor, onSave) {
 
 	editor.setCursorBufferPosition(cursorPosition);
 
-	if (editor.getScreenLineCount() < line){
-		return;
+	if (editor.getScreenLineCount() >= line) {
+		editor.scrollToScreenPosition([line + 2, 0]);
 	}
-	
-	editor.scrollToScreenPosition([line + 2, 0]);
 }
 
 exports.config = {
@@ -44,8 +42,8 @@ exports.config = {
 };
 
 exports.activate = function () {
-	atom.workspace.eachEditor(function (editor) {
-		editor.getBuffer().on('will-be-saved', function () {
+	atom.workspace.observeTextEditors(function (editor) {
+		editor.getBuffer().onWillSave(function () {
 			var isJS = editor.getGrammar().scopeName === 'source.js';
 
 			if (isJS && atom.config.get('esformatter.formatOnSave')) {
@@ -54,7 +52,7 @@ exports.activate = function () {
 		});
 	});
 
-	atom.commands.add('atom-workspace', 'esformatter', function () {
+	atom.commands.add('atom-text-editor', 'esformatter', function () {
 		init(atom.workspace.getActiveTextEditor());
 	});
 };
